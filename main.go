@@ -9,23 +9,25 @@ import (
 	"strings"
 )
 
-func readCommand() {
+func readCommandAndValidateFields() {
 	var list []string
 	var command string = ""
 	var text string
+	var tamanho int
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Enter the maximum number of notes: ")
-	var tamanho int
 	fmt.Scan(&tamanho)
+
 	for command != "exit" {
 		fmt.Println("Enter command and data:")
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
 		}
-		new_input := strings.Fields(input)
-		command = new_input[0]
-		text = strings.Join(new_input[1:], " ")
+		fields := strings.Fields(input)
+		command = fields[0]
+		text = strings.Join(fields[1:], " ")
 
 		switch command {
 		case "exit":
@@ -36,7 +38,7 @@ func readCommand() {
 				fmt.Println("[Error] Missing note argument")
 				continue
 			}
-			list = create(list, text, tamanho)
+			createPassandoListaPorReferencia(&list, text, tamanho)
 		case "list":
 			listar(list)
 		case "clear":
@@ -46,11 +48,11 @@ func readCommand() {
 				fmt.Println("[Error] Missing position argument")
 				continue
 			}
-			position, err := strconv.ParseInt(new_input[1], 10, 0)
+			position, err := strconv.ParseInt(fields[1], 10, 0)
 			if err != nil {
-				fmt.Printf("[Error] Invalid position: %v\n", new_input[1])
+				fmt.Printf("[Error] Invalid position: %v\n", fields[1])
 				continue
-			} else if len(new_input) == 2 {
+			} else if len(fields) == 2 {
 				fmt.Println("[Error] Missing note argument")
 				continue
 			}
@@ -59,16 +61,16 @@ func readCommand() {
 				continue
 			}
 
-			argument := strings.Join(new_input[2:], " ")
-			list = update(list, argument, position-1)
+			argument := strings.Join(fields[2:], " ")
+			update(&list, argument, position-1)
 		case "delete":
-			if len(new_input) < 2 {
+			if len(fields) < 2 {
 				fmt.Println("[Error] Missing position argument")
 				continue
 			}
-			position, err := strconv.ParseInt(new_input[1], 10, 0)
+			position, err := strconv.ParseInt(fields[1], 10, 0)
 			if err != nil {
-				fmt.Printf("[Error] Invalid position: %v\n", new_input[1])
+				fmt.Printf("[Error] Invalid position: %v\n", fields[1])
 				continue
 			}
 
@@ -80,7 +82,7 @@ func readCommand() {
 	}
 }
 
-func create(list []string, text string, tamanho int) []string {
+func createSimples(list []string, text string, tamanho int) []string {
 	if len(list) >= tamanho {
 		fmt.Println("[Error] Notepad is full")
 		return list
@@ -91,17 +93,26 @@ func create(list []string, text string, tamanho int) []string {
 	return append(list, text)
 }
 
-func update(list []string, argument string, position int64) []string {
+func createPassandoListaPorReferencia(list *[]string, text string, tamanho int) {
+	if len(*list) >= tamanho {
+		fmt.Println("[Error] Notepad is full")
+		return
+	}
 
-	for i, _ := range list {
+	fmt.Println("[OK] The note was successfully created")
+
+	*list = append((*list), text)
+}
+
+func update(list *[]string, argument string, position int64) {
+
+	for i, _ := range *list {
 		if int64(i) == position {
-			list[i] = argument
+			(*list)[i] = argument
 		}
 	}
 
 	fmt.Printf("[OK] The note at position %v was successfully updated\n", position+1)
-
-	return list
 }
 
 func delete(list []string, position int64, tamanho int) []string {
@@ -133,6 +144,6 @@ func clear(list []string) []string {
 func main() {
 	// 	write your code here
 
-	readCommand()
+	readCommandAndValidateFields()
 
 }

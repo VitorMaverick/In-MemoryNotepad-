@@ -142,8 +142,6 @@ func clear(list []string) []string {
 	return list
 }
 func main() {
-	// 	write your code here
-
 	readCommandAndValidateFields()
 
 }
